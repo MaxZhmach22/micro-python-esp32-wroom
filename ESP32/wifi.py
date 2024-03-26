@@ -44,14 +44,19 @@ def listen_on_port_97(lcd):
             # Получаем данные от клиента
             data = conn.recv(1024)
             if data:
-                print("Получены данные: {}".format(data.decode()))
-                # Отправляем ответ клиенту (эхо)
-                conn.sendall(f'Recieved message: {data}')
-                blink_led()
-                lcd.putstr(data.decode())
-                time.sleep(2)
-                lcd.clear()
+                request = data.decode('utf-8')
+                print(f'Получены данные: {request}')
+                
+                headers, body = request.split('\r\n\r\n', 1)
+                if body:
+                    lcd.putstr(body)
+                    blink_led()
+                    time.sleep(2)
+                    lcd.clear()
+                    
             # Закрываем соединение
+            response = 'HTTP/1.1 200 OK\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: text/plain\r\n\r\n' + 'Данные получены и обработаны.'
+            conn.sendall(response.encode('utf-8'))
             conn.close()
     except KeyboardInterrupt:
         print("Сервер остановлен")
