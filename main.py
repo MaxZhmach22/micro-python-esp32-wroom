@@ -12,7 +12,7 @@ def send_hello_world():
         sock.connect((server_ip, server_port))
 
         # Отправляем данные
-        message = 'hello world'
+        message = 'How do you do?'
         print(f"Отправка: {message}")
         sock.sendall(message.encode('utf-8'))
 

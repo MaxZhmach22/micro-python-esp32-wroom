@@ -1,64 +1,20 @@
+import wifi
 import machine
-import socket
-import time
-from blink import blink_led
+from machine import Pin, SoftI2C
+from lcd_api import LcdApi
+from i2c_lcd import I2cLcd
 
-retry_pause = 1.0
-led = machine.Pin(2, machine.Pin.OUT)
-led.value(False)
 
-def do_connect():
-    import network
-    wlan = network.WLAN(network.STA_IF)
-    wlan.active(True)
-    if not wlan.isconnected():
-        led.value(False)
-        print('connecting to network...')
-        wlan.connect('AsusHome', '89117788551')
-        while not wlan.isconnected():
-            time.sleep(retry_pause)
-            pass
-    led.value(True)
-    print('network config:', wlan.ifconfig())
-    
-do_connect()
+I2C_ADDR = 0x27
+totalRows = 2
+totalColumns = 16
 
-def listen_on_port_97():
-    host = '0.0.0.0'  # Привязка ко всем доступным сетевым интерфейсам
-    port = 97
+i2c = SoftI2C(scl=Pin(22), sda=Pin(21), freq=10000)     #initializing the I2C method for ESP32
 
-    # Создаем TCP сокет
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+lcd = I2cLcd(i2c, I2C_ADDR, totalRows, totalColumns)
 
-    # Привязываем сокет к указанному хосту и порту
-    sock.bind((host, port))
-
-    # Начинаем прослушивание порта с указанием количества возможных непринятых соединений
-    sock.listen(1)
-    print("Сервер слушает порт {}".format(port))
-
-    try:
-        while True:
-            # Принимаем входящее соединение
-            conn, addr = sock.accept()
-            print("Подключение от {}".format(addr))
-
-            # Получаем данные от клиента
-            data = conn.recv(1024)
-            if data:
-                print("Получены данные: {}".format(data.decode()))
-                # Отправляем ответ клиенту (эхо)
-                conn.sendall(f'Recieved message: {data}')
-                blink_led()
-            # Закрываем соединение
-            conn.close()
-    except KeyboardInterrupt:
-        print("Сервер остановлен")
-    finally:
-        # Закрываем сокет
-        sock.close()
+# Присоединяемся к wifi
+wifi.do_connect()
 
 # Запускаем функцию для прослушивания порта
-listen_on_port_97()
-
-
+wifi.listen_on_port_97(lcd)
