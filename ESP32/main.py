@@ -1,8 +1,11 @@
 import machine
 import socket
 import time
+from blink import blink_led
 
+retry_pause = 1.0
 led = machine.Pin(2, machine.Pin.OUT)
+led.value(False)
 
 def do_connect():
     import network
@@ -13,6 +16,7 @@ def do_connect():
         print('connecting to network...')
         wlan.connect('AsusHome', '89117788551')
         while not wlan.isconnected():
+            time.sleep(retry_pause)
             pass
     led.value(True)
     print('network config:', wlan.ifconfig())
@@ -45,13 +49,7 @@ def listen_on_port_97():
                 print("Получены данные: {}".format(data.decode()))
                 # Отправляем ответ клиенту (эхо)
                 conn.sendall(f'Recieved message: {data}')
-                led.value(False)
-                time.sleep(0.5)
-                led.value(True)
-                time.sleep(0.5)
-                led.value(False)
-                time.sleep(0.5)
-                led.value(True)
+                blink_led()
             # Закрываем соединение
             conn.close()
     except KeyboardInterrupt:
@@ -62,4 +60,5 @@ def listen_on_port_97():
 
 # Запускаем функцию для прослушивания порта
 listen_on_port_97()
+
 
